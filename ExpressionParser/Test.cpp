@@ -11,8 +11,8 @@ using std::string;
 int main()
 {
 	CParser::CExpressionParser parser;
-	//string exp = "(23+19)*50+71.3/28.6";
-	string exp = "(1+2)*3*(4-5/6)";
+	string exp = "(23+19)*50+71.3/28.6";
+	//string exp = "(1+2)*3*(4-5/6)";
 	parser.preprocess(exp);
 
 	cout << parser.getExp() << endl;
@@ -24,7 +24,8 @@ int main()
 
 	parser.showStack();
 
-	cout << parser.calc_exp_by_postfix() << endl;
+	double tmp = parser.calc_exp_by_postfix();
+	cout << tmp << endl;
 
 	return 0;
 }

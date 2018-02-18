@@ -18,13 +18,13 @@ namespace CParser
 			return false;
 		}
 
-		if (!isLegal(_str_expression))
+		if (!legal(_str_expression))
 		{
 			_error_msg = error::ILLEGAL_EXP;
 			return false;
 		}
 
-		if (!getElements())
+		if (!strtoexp())
 		{
 			_error_msg = error::UNKNOWN;
 			return false;
@@ -34,7 +34,7 @@ namespace CParser
 		return true;
 	}
 
-	bool CExpressionParser::getElements()
+	bool CExpressionParser::strtoexp()
 	{
 		PNode node;
 		vector<char> tmpVec(255);
@@ -98,13 +98,13 @@ namespace CParser
 			switch (iter->_type)
 			{
 			case elementType::OPERTOR:
-				if (isParenthesis_left(iter->_ele))
+				if (parenthesis_left(iter->_ele))
 				{
 					tmpStack.push(iter);
 				}
-				else if (isParenthesis_right(iter->_ele))
+				else if (parenthesis_right(iter->_ele))
 				{
-					while (!isParenthesis_left(tmpStack.top()->_ele))
+					while (!parenthesis_left(tmpStack.top()->_ele))
 					{
 						tmpNode = tmpStack.top();
 						tmpStack.pop();
@@ -115,7 +115,7 @@ namespace CParser
 				}
 				else //General Operator
 				{
-					while (!tmpStack.empty() && isLessEqual(iter->_ele, tmpStack.top()->_ele) && !isParenthesis_left(tmpStack.top()->_ele))
+					while (!tmpStack.empty() && less_equal(iter->_ele, tmpStack.top()->_ele) && !parenthesis_left(tmpStack.top()->_ele))
 					{
 						tmpNode = tmpStack.top();
 						tmpStack.pop();
@@ -183,17 +183,21 @@ namespace CParser
 		{
 		case '+':
 			result = x + y;
+			_error_msg = error::SUCCESS;
 			break;
 		case '-':
 			result = x - y;
+			_error_msg = error::SUCCESS;
 			break;
 		case '*':
 			result = x * y;
+			_error_msg = error::SUCCESS;
 			break;
 		case '/':
 			if (y != 0)
 			{
 				result = x / y;
+				_error_msg = error::SUCCESS;
 			}
 			else
 			{
@@ -201,6 +205,7 @@ namespace CParser
 			}
 			break;
 		default:
+			_error_msg = error::UNKNOWN;
 			break;
 		}
 
@@ -231,7 +236,7 @@ namespace CParser
 		}
 	}
 
-	bool CExpressionParser::isParenthesis_left(string ele)
+	bool CExpressionParser::parenthesis_left(string ele)
 	{
 		if (ele.length() == 1 && ele.at(0) == 40)
 		{
@@ -243,7 +248,7 @@ namespace CParser
 		}
 	}
 
-	bool CExpressionParser::isParenthesis_right(string ele)
+	bool CExpressionParser::parenthesis_right(string ele)
 	{
 		if (ele.length() == 1 && ele.at(0) == 41)
 		{
@@ -255,7 +260,7 @@ namespace CParser
 		}
 	}
 
-	bool CExpressionParser::isLessEqual(string ele, string current)
+	bool CExpressionParser::less_equal(string ele, string current)
 	{
 		int s = _priority[ele];
 		int t = _priority[current];
@@ -270,7 +275,7 @@ namespace CParser
 		}
 	}
 
-	bool CExpressionParser::isLegal(string exp)
+	bool CExpressionParser::legal(string exp)
 	{
 		return true;
 	}

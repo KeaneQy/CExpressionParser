@@ -86,10 +86,10 @@ namespace CParser
 	protected:
 		elementType get_element_type(char c);
 		double calc_with_operator(double x, double y, char op);
-		bool isLegal(string exp);
-		bool isParenthesis_left(string ele);
-		bool isParenthesis_right(string ele);
-		bool isLessEqual(string source, string target);
-		bool getElements();
+		bool legal(string exp);
+		bool parenthesis_left(string ele);
+		bool parenthesis_right(string ele);
+		bool less_equal(string source, string target);
+		bool strtoexp();
 	};
 }
