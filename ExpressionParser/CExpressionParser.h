@@ -77,7 +77,7 @@ namespace CParser
 	public:
 		CExpressionParser();					//constructor
 		bool preprocess(string exp);
-		void itop();							//infix to postfix, 中缀表达式转为后缀表达式
+		void itop();							//infix to postfix
 		double calc_exp_by_postfix();
 #ifdef MY_DEBUG
 		string getExp();
