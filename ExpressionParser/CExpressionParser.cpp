@@ -26,24 +26,28 @@ namespace CParser
 		if (_str_expression.empty())
 		{
 			_error_msg = error::EMPTY_EXP;
+			_bool_valid = false;
 			return false;
 		}
 
 		if (!legal(_str_expression))
 		{
 			_error_msg = error::ILLEGAL_EXP;
+			_bool_valid = false;
 			return false;
 		}
 
 		if (!strtoexp())
 		{
 			_error_msg = error::UNKNOWN;
+			_bool_valid = false;
 			return false;
 		}
 
 		if (!legal_exp(_vec_infix_ptr))
 		{
 			_error_msg = error::ILLEGAL_EXP;
+			_bool_valid = false;
 			return false;
 		}
 
@@ -53,6 +57,11 @@ namespace CParser
 
 	bool CExpressionParser::strtoexp()
 	{
+		if (!_bool_valid)
+		{
+			return _bool_valid;
+		}
+
 		PNode node;
 		vector<char> tmpVec(255);
 		tmpVec.clear();
@@ -110,6 +119,11 @@ namespace CParser
 
 	void CExpressionParser::itop()
 	{
+		if (!_bool_valid)
+		{
+			return;
+		}
+
 		stack<PNode> tmpStack;
 		PNode tmpNode;
 
@@ -164,9 +178,15 @@ namespace CParser
 
 	double CExpressionParser::calc_exp_by_postfix()
 	{
+		double result = -9999999;
+		if (!_bool_valid)
+		{
+			return result;
+		}
+
 		stack<double> tmpStack;
 		PNode tmpNode;
-		double result = -9999999;
+		
 
 		for (auto iter : (*_vec_postfix_ptr))
 		{
@@ -313,12 +333,12 @@ namespace CParser
 
 		cout << tmp << " this is the second matching." << endl;
 #endif
+		_bool_valid = tmp;
 		return tmp;
 	}
 
 	bool CExpressionParser::legal_exp(PNodeVec infix)
 	{
-		
 		regex num_reg(R"(^[-+]?\d+\.?\d+$)");		//match numbers (both of integer and decimal)
 		bool tmp = true;
 		int tmpCount = 0;
@@ -356,7 +376,7 @@ namespace CParser
 		{
 			tmp = false;
 		}
-		
+		_bool_valid = tmp;
 		return tmp;
 	}
 

@@ -11,9 +11,9 @@ using std::string;
 int main()
 {
 	CParser::CExpressionParser parser;
-	string exp = "(233.1++12.5)*250+-711.3333/2878.6";
+	string exp = "(233.1+12.5))*250+-711.3333/2878.6";
 	//string exp = "(1+2)*3*(4-5/6)";
-	parser.preprocess(exp);
+	bool result = parser.preprocess(exp);
 
 	cout << parser.getExp() << endl;
 	

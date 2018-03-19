@@ -78,6 +78,7 @@ namespace CParser
 		PNodeVec _vec_infix_ptr;
 		map<string, int> _priority = { { "+", 1 },{ "-", 1 },{ "*", 2 },{ "/", 2 },{ "(", 3 },{ ")", 3 } };
 		error _error_msg = error::SUCCESS;
+		bool _bool_valid = true;
 	public:
 		CExpressionParser();					//constructor
 		bool preprocess(string exp);
