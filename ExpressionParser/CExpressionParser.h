@@ -1,6 +1,6 @@
 #pragma once
 
-//#define MY_DEBUG
+#define MY_DEBUG
 
 #include <stdlib.h>
 
@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <algorithm>
+#include <regex>
 
 using std::stack;
 using std::string;
@@ -18,6 +19,9 @@ using std::map;
 using std::shared_ptr;
 using std::make_shared;
 using std::find;
+using std::regex;
+using std::regex_match;
+using std::regex_search;
 
 #ifdef MY_DEBUG
 
@@ -79,6 +83,7 @@ namespace CParser
 		bool preprocess(string exp);
 		void itop();							//infix to postfix
 		double calc_exp_by_postfix();
+		void clear();
 #ifdef MY_DEBUG
 		string getExp();
 		void showStack();
@@ -91,5 +96,6 @@ namespace CParser
 		bool parenthesis_right(string ele);
 		bool less_equal(string source, string target);
 		bool strtoexp();
+		bool legal_exp(PNodeVec infix);
 	};
 }

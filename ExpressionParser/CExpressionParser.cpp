@@ -8,8 +8,19 @@ namespace CParser
 		_vec_infix_ptr = make_shared<NodeVec>();
 	}
 
+
+	void CExpressionParser::clear()
+	{
+		_str_expression.clear();
+		_vec_postfix_ptr->clear();
+		_vec_infix_ptr->clear();
+	}
+
 	bool CExpressionParser::preprocess(string exp)
 	{
+		//clear all member variables
+		clear();
+
 		_str_expression = exp;
 
 		if (_str_expression.empty())
@@ -30,6 +41,12 @@ namespace CParser
 			return false;
 		}
 
+		if (!legal_exp(_vec_infix_ptr))
+		{
+			_error_msg = error::ILLEGAL_EXP;
+			return false;
+		}
+
 		_error_msg = error::SUCCESS;
 		return true;
 	}
@@ -41,6 +58,7 @@ namespace CParser
 		tmpVec.clear();
 		elementType curType = elementType::NONE;
 		elementType lastType = elementType::NONE;
+		char lastChar = ' ';
 		string tmpStr;
 
 		for (auto iter : _str_expression)
@@ -48,7 +66,8 @@ namespace CParser
 			char tmpChar = iter;
 			curType = get_element_type(tmpChar);
 
-			if (curType == lastType && (curType == elementType::NUM || curType == elementType::FUNC))
+			if ((curType == lastType || (lastChar == 43 || lastChar == 45) && curType == elementType::NUM) && 
+				(curType == elementType::NUM || curType == elementType::FUNC))
 			{
 				tmpVec.push_back(tmpChar);
 			}
@@ -74,6 +93,7 @@ namespace CParser
 			}
 
 			lastType = curType;
+			lastChar = tmpChar;
 		}
 
 		//The last node
@@ -277,8 +297,69 @@ namespace CParser
 
 	bool CExpressionParser::legal(string exp)
 	{
-		return true;
+		bool tmp = true;
+		regex basic_reg(R"(^[\d\+\-\*\/\(\)\.]+$)");		//match expression (only inlcude numbers and .+-*\())
+		tmp = regex_match(exp, basic_reg);
+		
+		regex op_reg(R"([\+\-]{3,}|[\*\/]{2,}|\.{2,})");		//match ilegal ops (+-*/.)
+
+#ifdef MY_DEBUG
+
+		cout << tmp << " this is the first matching." << endl;
+#endif
+		tmp = !regex_search(exp, op_reg);
+
+#ifdef MY_DEBUG
+
+		cout << tmp << " this is the second matching." << endl;
+#endif
+		return tmp;
 	}
+
+	bool CExpressionParser::legal_exp(PNodeVec infix)
+	{
+		
+		regex num_reg(R"(^[-+]?\d+\.?\d+$)");		//match numbers (both of integer and decimal)
+		bool tmp = true;
+		int tmpCount = 0;
+		for (auto iter : (*infix))
+		{
+			elementType tmpType = iter->_type;
+
+			if (tmpType == elementType::OPERTOR)
+			{
+				if (iter->_ele.at(0) == 40 || iter->_ele.at(0) == 41)
+				{
+					++tmpCount;
+				}
+			}
+
+			if (tmpType == elementType::NUM)
+			{
+				tmp = regex_match(iter->_ele, num_reg);
+#ifdef MY_DEBUG
+
+				cout << tmp << " this is the third num matching." << endl;
+#endif
+			}
+			else
+			{
+				tmp = true;
+			}
+		}
+
+		if (tmpCount % 2 == 0)
+		{
+			tmp = true;
+		}
+		else
+		{
+			tmp = false;
+		}
+		
+		return tmp;
+	}
+
 #ifdef MY_DEBUG
 	string CExpressionParser::getExp()
 	{
