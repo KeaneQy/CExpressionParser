@@ -48,7 +48,9 @@ namespace CParser
 		NUM,
 		OPERTOR,
 		POINT,
-		NONE
+		NONE,
+		PARENTHSIS_LEFT,
+		PARENTHSIS_RIGHT
 	};
 
 	enum class funcList
@@ -93,8 +95,6 @@ namespace CParser
 		elementType get_element_type(char c);
 		double calc_with_operator(double x, double y, char op);
 		bool legal(string exp);
-		bool parenthesis_left(string ele);
-		bool parenthesis_right(string ele);
 		bool less_equal(string source, string target);
 		bool strtoexp();
 		bool legal_exp(PNodeVec infix);

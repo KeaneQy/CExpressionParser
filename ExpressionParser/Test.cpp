@@ -11,7 +11,7 @@ using std::string;
 int main()
 {
 	CParser::CExpressionParser parser;
-	string exp = "(233.1+12.5))*250+-711.3333/2878.6";
+	string exp = "(1.345+(+2.22))*(3.5678-5.33/6.765)";
 	//string exp = "(1+2)*3*(4-5/6)";
 	bool result = parser.preprocess(exp);
 

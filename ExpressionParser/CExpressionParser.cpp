@@ -61,59 +61,106 @@ namespace CParser
 		{
 			return _bool_valid;
 		}
-
+		
 		PNode node;
-		vector<char> tmpVec(255);
-		tmpVec.clear();
 		elementType curType = elementType::NONE;
-		elementType lastType = elementType::NONE;
-		char lastChar = ' ';
-		string tmpStr;
-
+		stack<PNode> tmpStack;
+		
 		for (auto iter : _str_expression)
 		{
 			char tmpChar = iter;
 			curType = get_element_type(tmpChar);
+			
+			node.reset();
 
-			if ((curType == lastType || (lastChar == 43 || lastChar == 45) && curType == elementType::NUM) && 
-				(curType == elementType::NUM || curType == elementType::FUNC))
+			if (_vec_infix_ptr->empty())
 			{
-				tmpVec.push_back(tmpChar);
+				node = make_shared<Node>();
+				node->_ele = tmpChar;
+				if (curType == elementType::POINT)
+				{
+					curType = elementType::NUM;
+				}
+				node->_type = curType;
+				_vec_infix_ptr->push_back(node);
+
+				continue;
 			}
-			else
+			
+			switch (curType)
 			{
-				if (!tmpVec.empty())
+			case CParser::elementType::FUNC:
+				break;
+			case CParser::elementType::NUM:
+
+				node = _vec_infix_ptr->back();
+				if (node->_type == elementType::NUM)
+				{
+					node->_ele += tmpChar;
+				}
+				else
 				{
 					node = make_shared<Node>();
-					tmpStr.insert(tmpStr.begin(), tmpVec.begin(), tmpVec.end());
-					node->_ele = tmpStr;
-					node->_type = lastType;
-					tmpVec.clear();
-					tmpStr.clear();
+					node->_ele = tmpChar;
+					node->_type = elementType::NUM;
+					_vec_infix_ptr->push_back(node);
+				}
 
-					tmpVec.push_back(tmpChar);
+				break;
+			case CParser::elementType::OPERTOR:
 
+				node = _vec_infix_ptr->back();
+				if (node->_type == elementType::PARENTHSIS_LEFT)
+				{
+					node = make_shared<Node>();
+					node->_ele = tmpChar;
+					node->_type = elementType::NUM;
 					_vec_infix_ptr->push_back(node);
 				}
 				else
 				{
-					tmpVec.push_back(tmpChar);
+					node = make_shared<Node>();
+					node->_ele = tmpChar;
+					node->_type = elementType::OPERTOR;
+					_vec_infix_ptr->push_back(node);
 				}
+
+				break;
+			case CParser::elementType::POINT:
+
+				node = _vec_infix_ptr->back();
+				if (node->_type == elementType::NUM)
+				{
+					node->_ele += tmpChar;
+					node->_type = elementType::NUM;
+				}
+				else
+				{
+					node = make_shared<Node>();
+					node->_ele = tmpChar;
+					node->_type = elementType::NUM;
+					_vec_infix_ptr->push_back(node);
+				}
+
+				break;
+			case CParser::elementType::NONE:
+				break;
+			case CParser::elementType::PARENTHSIS_LEFT:
+				node = make_shared<Node>();
+				node->_ele = tmpChar;
+				node->_type = elementType::PARENTHSIS_LEFT;
+				_vec_infix_ptr->push_back(node);
+				break;
+			case CParser::elementType::PARENTHSIS_RIGHT:
+				node = make_shared<Node>();
+				node->_ele = tmpChar;
+				node->_type = elementType::PARENTHSIS_RIGHT;
+				_vec_infix_ptr->push_back(node);
+				break;
+			default:
+				break;
 			}
-
-			lastType = curType;
-			lastChar = tmpChar;
 		}
-
-		//The last node
-		node = make_shared<Node>();
-		tmpStr.insert(tmpStr.begin(), tmpVec.begin(), tmpVec.end());
-		node->_ele = tmpStr;
-		node->_type = curType;
-		tmpVec.clear();
-		tmpStr.clear();
-
-		_vec_infix_ptr->push_back(node);
 		return true;
 	}
 
@@ -131,41 +178,37 @@ namespace CParser
 		{
 			switch (iter->_type)
 			{
-			case elementType::OPERTOR:
-				if (parenthesis_left(iter->_ele))
-				{
-					tmpStack.push(iter);
-				}
-				else if (parenthesis_right(iter->_ele))
-				{
-					while (!parenthesis_left(tmpStack.top()->_ele))
-					{
-						tmpNode = tmpStack.top();
-						tmpStack.pop();
-						_vec_postfix_ptr->push_back(tmpNode);
-					}
-
-					tmpStack.pop();
-				}
-				else //General Operator
-				{
-					while (!tmpStack.empty() && less_equal(iter->_ele, tmpStack.top()->_ele) && !parenthesis_left(tmpStack.top()->_ele))
-					{
-						tmpNode = tmpStack.top();
-						tmpStack.pop();
-						_vec_postfix_ptr->push_back(tmpNode);
-					}
-					
-					tmpStack.push(iter);
-				}
-	
+			case CParser::elementType::FUNC:
 				break;
-			case elementType::NUM:
+			case CParser::elementType::NUM:
 				_vec_postfix_ptr->push_back(iter);
+				break;
+			case CParser::elementType::OPERTOR:
+				while (!tmpStack.empty() && less_equal(iter->_ele, tmpStack.top()->_ele) && tmpStack.top()->_type != elementType::PARENTHSIS_LEFT)
+				{
+					tmpNode = tmpStack.top();
+					tmpStack.pop();
+					_vec_postfix_ptr->push_back(tmpNode);
+				}
+
+				tmpStack.push(iter);
+				break;
+			case CParser::elementType::PARENTHSIS_LEFT:
+				tmpStack.push(iter);
+				break;
+			case CParser::elementType::PARENTHSIS_RIGHT:
+				while (tmpStack.top()->_type != elementType::PARENTHSIS_LEFT)
+				{
+					tmpNode = tmpStack.top();
+					tmpStack.pop();
+					_vec_postfix_ptr->push_back(tmpNode);
+				}
+
+				tmpStack.pop();
 				break;
 			default:
 				break;
-			}
+			}	
 		}
 
 		while (!tmpStack.empty())
@@ -260,43 +303,23 @@ namespace CParser
 		}
 		else if (c == 46)
 		{
-			return elementType::NUM;
+			return elementType::POINT;
 		}
-		else if (c <= 43 && c >= 40)
+		else if (c == 43 || c == 42 || c == 45 || c == 47)
 		{
 			return elementType::OPERTOR;
 		}
-		else if (c == 45 || c == 47)
+		else if (c == 40)
 		{
-			return elementType::OPERTOR;
+			return elementType::PARENTHSIS_LEFT;
+		}
+		else if (c == 41)
+		{
+			return elementType::PARENTHSIS_RIGHT;
 		}
 		else
 		{
 			return elementType::NONE;
-		}
-	}
-
-	bool CExpressionParser::parenthesis_left(string ele)
-	{
-		if (ele.length() == 1 && ele.at(0) == 40)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
-	bool CExpressionParser::parenthesis_right(string ele)
-	{
-		if (ele.length() == 1 && ele.at(0) == 41)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
 		}
 	}
 
@@ -321,7 +344,7 @@ namespace CParser
 		regex basic_reg(R"(^[\d\+\-\*\/\(\)\.]+$)");		//match expression (only inlcude numbers and .+-*\())
 		tmp = regex_match(exp, basic_reg);
 		
-		regex op_reg(R"([\+\-]{3,}|[\*\/]{2,}|\.{2,})");		//match ilegal ops (+-*/.)
+		regex op_reg(R"([\+\-]{2,}|[\*\/]{2,}|\.{2,})");		//match ilegal ops (+-*/.)
 
 #ifdef MY_DEBUG
 
@@ -346,12 +369,9 @@ namespace CParser
 		{
 			elementType tmpType = iter->_type;
 
-			if (tmpType == elementType::OPERTOR)
+			if (tmpType == elementType::PARENTHSIS_LEFT || tmpType == elementType::PARENTHSIS_RIGHT)
 			{
-				if (iter->_ele.at(0) == 40 || iter->_ele.at(0) == 41)
-				{
-					++tmpCount;
-				}
+				++tmpCount;
 			}
 
 			if (tmpType == elementType::NUM)
